@@ -97,6 +97,12 @@
 
 - If you need to define attributes that aren't really owned by any particular cookbook, use `node['global']` as the namespace and define them in roles or environment files. It is usually preferable to have attributes owned by a cookbook, but sometimes there are exception cases and the exceptions should be clearly marked.
 
+- Always use hashes for complicated attributes. Avoid using arrays.
+
+    > "Due to the precedence merging algorithm Chef uses, Arrays are very difficult to work with." - [Our Experiences with Chef: Cookbook and Attribute Design](https://omniti.com/seeds/seeds-our-experiences-with-chef-cookbook-and-attribute-design)
+
+    > "With hashes, this merge is relatively straight forward, if both the original and override values are hashes they are recursively merged together all the way down. This logic is less clear on arrays though. In Chef 11, the behavior is that on different precedence levels, the higher value overrides as with strings and other simple types." - [Arrays and Chef Attributes, Noah Kantrowitz](https://coderanger.net/arrays-and-chef/)
+
 ## Cookbooks
 
 - Use [Semantic Versioning](http://semver.org/) on any cookbook that is uploaded to Chef Server or published to Supermarket. Every cookbook declares a public API, and thus it is appropriate to use SemVer.
