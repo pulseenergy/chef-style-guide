@@ -26,6 +26,8 @@
 
 - Foodcritic is an excellent lint tool for Chef cookbooks. This style guide will skip over anything that is already automated by Foodcritic.
 
+- https://github.com/ampledata/cookbook-style-guide
+
 ## Repository Structure
 
 - Create a new git repository for each cookbook. This is known as [The Berkshelf Way](the_berkshelf_way/).
