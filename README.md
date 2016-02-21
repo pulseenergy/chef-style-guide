@@ -51,7 +51,8 @@
 - All attributes defined by your cookbook should exist within your cookbook's namespace.
 
     ```ruby
-    node['my_cookbook']['my_attribute'] = 'foo'
+    # Attributes:: external
+    default['my_cookbook']['my_attribute'] = 'foo'
     ```
 
 - If you need to read attributes from another cookbook, copy them into the namespace of your own cookbook. Do this inside `attributes/external.rb`. Try to minimize the number of external attribute accesses.
@@ -59,11 +60,10 @@
     Use `include_attribute` to create sections within your `external.rb`. Although `include_attribute` is only a hint to the Chef compiler, it makes it much easier to search for dependencies in a code base when you want to refactor a cookbook.
 
     ```ruby
+    # Attributes:: external
     include_attribute 'other_cookbook::default'
-    node['my_cookbook']['limit'] = node['other_cookbook']['limit']
+    default['my_cookbook']['limit'] = node['other_cookbook']['limit']
     ```
-
-- If you are writing a wrapper cookbook, then it's okay to put your overrides into `default.rb`. If you need to access any other cookbooks other than the one being wrapped, those should go into `attributes/external.rb`.
 
 - Never use `override` level in cookbook attribute files. Always use recipes to override attributes set by other cookbooks.
 
@@ -78,18 +78,22 @@
     node.override['other_cookbook']['http_port'] = 8080
     ```
 
+    This makes it clear that the `attributes` directory is used to define part of your cookbook's public interface.
+
+    Moving overrides into recipes helps keep similar code together. If you are overriding attributes of other cookbooks but there is no corresponding `include_recipe` that warns you of an implicit dependency. Sometimes that is okay if your goal is a loose coupling of cookbooks.
+
 - Avoid derived attributes in attribute files.
 
     ```ruby
     # Attributes:: default
     // DO NOT DO THIS
-    node['my_cookbook']['version'] = '1.4.8'
-    node['my_cookbook']['url'] = "http://mysite/#{node['my_cookbook']['version']}.tar.gz"
+    default['my_cookbook']['version'] = '1.4.8'
+    default['my_cookbook']['url'] = "http://mysite/#{node['my_cookbook']['version']}.tar.gz"
     ```
 
     If somebody overrides the `version` attribute, the `url` attribute won't be recomputed. It doesn't matter whether the attribute is overridden in an environment file or by another cookbook.
 
-    When you need to derive attributes, do it inside a recipe or provider.
+    When you need to derive attributes, do it inside a recipe or provider. Or use the [Delayed Interpolation](https://coderanger.net/derived-attributes/) tip by Noah Kantrowitz.
 
 - If you need to define attributes that aren't really owned by any particular cookbook, use `node['global']` as the namespace and define them in roles or environment files. It is usually preferable to have attributes owned by a cookbook, but sometimes there are exception cases and the exceptions should be clearly marked.
 
@@ -119,6 +123,8 @@
 
 - If you have two cookbooks with many dependencies that need to obtain a shared attribute, consider moving that attribute into a new lightweight cookbook or a role if it will be consistent across environments. This helps to avoid gigantic dependency chains that Berkshelf will struggle to resolve. Do not put it into an environment file if you expect it to be the same in all environments.
 
+- If you are publishing to Supermarket, use [Stove](https://github.com/sethvargo/stove) to automate the process.
+
 ## Providers
 
 - If you include a provider in your cookbook, the cookbook name should not include hyphens. The name of a provider includes the cookbook name, but provider names never use hyphens, only underscores. So if your cookbook is named with a hyphen, it will make it harder to search for uses of the provider in your code.
@@ -144,6 +150,21 @@
     > "Don’t use the default recipe (leave it blank). Instead, create recipes called server or client (or other)." - [Patterns To Follow](https://docs.chef.io/ruby.html#patterns-to-follow)
 
 - Create a `common.rb` recipe if there are multiple sub-recipes that would otherwise define the same resources (eg. a directory). Otherwise you might find yourself running into [CHEF-3694](http://tickets.chef.io/browse/CHEF-3694) warnings.
+
+- Use `node[cookbook_name]` to refer to attributes within your cookbook's namespace. If you ever copy or rename the cookbook, you won't need to make nearly as many changes. *Caveat:* `cookbook_name` is not defined in attribute files, so you need to set it as a local variable if you want to use it.
+
+    ```ruby
+    # Attributes:: default
+    cookbook_name = 'my_cookbook'
+    default[cookbook_name]['svc_user'] = 'alice'
+    ```
+
+    ```ruby
+    # Recipe:: server
+    user node[cookbook_name]['svc_user'] do
+      action :create
+    end
+    ```
 
 ## Templates
 
