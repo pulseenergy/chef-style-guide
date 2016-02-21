@@ -42,6 +42,8 @@
 
     > "Normal and override attributes are cleared at the start of the chef-client run, and are then rebuilt as part of the run based on the code in the cookbooks and recipes at that time." - [Patterns To Follow](https://docs.chef.io/ruby.html#patterns-to-follow)
 
+- Start with a minimal set of attributes for your cookbook. You can easily add new attributes later, but removing attributes always means breaking compatibility, and that means you have to increment the major version.
+
 - All attributes defined by your cookbook should exist within your cookbook's namespace.
 
     ```ruby
@@ -59,6 +61,19 @@
 
 - If you are writing a wrapper cookbook, then it's okay to put your overrides into `default.rb`. If you need to access any other cookbooks other than the one being wrapped, those should go into `attributes/external.rb`.
 
+- Never use `override` level in cookbook attribute files. Always use recipes to override attributes set by other cookbooks.
+
+    Values in the node hierarchy are computed by merging the attribute files from all cookbooks in the run, regardless of whether you're using any recipes from those cookbooks. The `include_attribute` directive is just an ordering hint; attribute files are always included.
+
+    If another cookbook wants to reference an attribute in your cookbook, it needs to depend on your cookbook. That should not carry the penalty of having additional side effects on attributes of other cookbooks.
+
+    The most common place to override attributes is in wrapper cookbooks, so wrapper cookbooks are the main focus of this rule.
+
+    ```ruby
+    # Recipe:: overrides
+    node.override['other_cookbook']['http_port'] = 8080
+    ```
+
 - Avoid derived attributes in attribute files.
 
     ```ruby
@@ -71,6 +86,8 @@
     If somebody overrides the `version` attribute, the `url` attribute won't be recomputed. It doesn't matter whether the attribute is overridden in an environment file or by another cookbook.
 
     When you need to derive attributes, do it inside a recipe or provider.
+
+- If you need to define attributes that aren't really owned by any particular cookbook, use `node['global']` as the namespace and define them in roles or environment files. It is usually preferable to have attributes owned by a cookbook, but sometimes there are exception cases and the exceptions should be clearly marked.
 
 ## Cookbooks
 
@@ -94,9 +111,13 @@
 
 - Include a `CHANGELOG.md`. Focus on clear documentation of breaking changes. Be terse with everything else. Any changes that are not backward-compatible should bump the major version and warrant an entry in the CHANGELOG so that people know how to become compatible with the latest version.
 
-- If you have two cookbooks with many dependencies that need to obtain a shared attribute, consider moving that attribute into a new lightweight cookbook. This helps to avoid gigantic dependency chains that Berkshelf will struggle to resolve.
+- Include a `README.md`. Use only markdown, never HTML. Supermarket will not render HTML in your README and it ends up looking terrible.
+
+- If you have two cookbooks with many dependencies that need to obtain a shared attribute, consider moving that attribute into a new lightweight cookbook or a role if it will be consistent across environments. This helps to avoid gigantic dependency chains that Berkshelf will struggle to resolve. Do not put it into an environment file if you expect it to be the same in all environments.
 
 ## Providers
+
+- If you include a provider in your cookbook, the cookbook name should not include hyphens. The name of a provider includes the cookbook name, but provider names never use hyphens, only underscores. So if your cookbook is named with a hyphen, it will make it harder to search for uses of the provider in your code.
 
 - Always `use_inline_resources` at the start of your provider. This is a kind of "strict mode". This is expected to become the default behaviour in Chef 13.
 
@@ -106,9 +127,15 @@
 
 - Avoid unnecessary recipes in your provider cookbooks. They only serve as a distraction and maintenance burden.
 
+- Always define a `:remove` action to clean up resources created by your provider.
+
+    Imagine you have written a provider that installs an application into `new_resource.prefix`. Then somebody who is using your provider in a recipe decides to install to a different prefix. How should they clean up anything left behind? The answer is that they should change the action on the existing provider to `:remove` and declare a new resource using your provider with the new path. The *tombstone* resource needs to be left in the configuration long enough for all nodes to converge.
+
+    Some people can sidestep this by using disposable infrastructure, but many people do not have that luxury.
+
 ## Recipes
 
-- Leave the `default.rb` recipe empty. Avoid the tempation to include sub-recipes inside `default.rb`. Create other recipes with specific functions. Recipes are the main public interface of your cookbook, and consumers are expected to know about them.
+- Include a `default.rb` recipe but leave it empty. Avoid the tempation to include sub-recipes inside `default.rb`. Create other recipes with specific functions. Recipes are the main public interface of your cookbook, and consumers are expected to know about them.
 
     > "Don’t use the default recipe (leave it blank). Instead, create recipes called server or client (or other)." - [Patterns To Follow](https://docs.chef.io/ruby.html#patterns-to-follow)
 
@@ -173,6 +200,14 @@
 
 - Try to name your data bag so that it matches the name of your cookbook. But due to the shared nature of data bags, this is often not possible.
 
+- If you are using your data bag as a collection, each item in the data bag should include an `action` attribute to explicitly define whether resources should be created or deleted.
+
+    If you don't specify this, then you have the implicit assumption that all resources in the data bag will result in resource creation. Then you will have a bad time when you want to remove something from the data bag, because remnants will get left behind.
+
+    Chef is only able to act on the presence of resources, not the absence of them. In order to clean up resources effectively, you need to use *tombstones* that last long enough for all nodes to finish converging the deletion.
+
+    The exception is when your collection is used to render a single resource, such as when a template file is populated by all the items of a data bag. In this case, any data bag entries that are removed will automatically disappear from the template.
+
 ## Nodes
 
 - Use only one entry in the run_list for each node. Node run lists do not have the benefit of version control, and become very difficult to maintain once they grow long enough.
@@ -205,10 +240,6 @@
     chef-client --log_level debug
     ```
 
-## Supermarket
-
-- TODO: 
-
 ## Common
 
 - Use ChefDK to install your development environment.
@@ -227,10 +258,17 @@
 
 - Avoid hardcoding node names (or patterns to match node names) anywhere in your recipes. Use attributes instead.
 
+- If you want to serialize part of the node hierarchy to YAML, convert it to JSON first to wash off the cruft.
+
+    Node attributes aren't regular Ruby hashes, they are objects of type `Chef::Node::ImmutableMash`. When you serialize to YAML, you get `ImmutableMash` strings [littered all around](http://lists.opscode.com/sympa/arc/chef/2014-02/msg00054.html). Somehow the JSON serializer does not suffer from this problem.
+
+    ```ruby
+    my_yaml = JSON.parse(my_object.to_json).to_yaml
+    ```
+
+- When you have some code that can definitely be removed at a future date or when some future condition is met, add an `# UNTIL:` comment that specifies the removal condition. Most *tombstone* resources (those with a `:delete` action) should include an `UNTIL:` comment.
+
 ## Unresolved questions
 
-- Hyphens or underscores?
 - Where is the best place to apply version constraints?
 - What should you do with Chef logfiles? Can they be shipped to Splunk or Logstash easily?
-- Does anybody have great tips on how to avoid making a README.md that ends up looking terrible on Supermarket?
-
