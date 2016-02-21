@@ -118,7 +118,7 @@
 
     If you need to use attributes in a template, add them to the template resource using the `variables` parameter.
 
-    ```ruby
+    ```erb
     // GOOD:
     Alice is <%= @age %> years old.
     // BAD:
