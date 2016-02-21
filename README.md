@@ -78,6 +78,8 @@
 
     If you aren't using Test Kitchen, this means bumping the patch version every time you try a new change. You should be using Test Kitchen.
 
+    When creating a new cookbook, move quickly to create a 1.0 version. You should definitely not spend more than a week creating 0.x.x releases. Cookbooks rapidly become dependent on each other, so you should acknowledge that you have a public interface by issuing a 1.0 release.
+
 - Never *ever* decrement the version of a cookbook. Failure to adhere is a violation of [Rule #2 in SemVer 2.0](http://semver.org/#spec-item-2).
 
     Chef-client will always use the highest-numbered cookbook that is available after considering all constraints. If Chef Server knows about a cookbook with a higher number than the one you just uploaded, then your code is not going to get run. Do not add a version constraint in your test environment to work around this; it will definitely bite you later on.
