@@ -28,6 +28,8 @@
 
 - https://github.com/ampledata/cookbook-style-guide
 
+- https://github.com/johnbellone/chef-style-guide#rubocop
+
 ## Repository Structure
 
 - Create a new git repository for each cookbook. This is known as [The Berkshelf Way](the_berkshelf_way/).
