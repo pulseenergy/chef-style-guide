@@ -155,7 +155,9 @@
 
     > "Don’t use the default recipe (leave it blank). Instead, create recipes called server or client (or other)." - [Patterns To Follow](https://docs.chef.io/ruby.html#patterns-to-follow)
 
-- Create a `common.rb` recipe if there are multiple sub-recipes that would otherwise define the same resources (eg. a directory). Otherwise you might find yourself running into [CHEF-3694](http://tickets.chef.io/browse/CHEF-3694) warnings.
+- Private recipes should start with an underscore. The absence of an underscore is an indicator that the recipe is meant for use in run lists, or included from recipes in other cookbooks.
+
+- Create a `_common.rb` recipe if there are multiple sub-recipes that would otherwise define the same resources (eg. a directory). Otherwise you might find yourself running into [CHEF-3694](http://tickets.chef.io/browse/CHEF-3694) warnings.
 
 - Use `node[cookbook_name]` to refer to attributes within your cookbook's namespace. If you ever copy or rename the cookbook, you won't need to make nearly as many changes. *Caveat:* `cookbook_name` is not defined in attribute files, so you need to set it as a local variable if you want to use it.
 
