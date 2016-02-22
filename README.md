@@ -30,6 +30,8 @@
 
 - https://github.com/johnbellone/chef-style-guide#rubocop
 
+- https://github.com/facebook/chef-utils/blob/master/Philosophy.md
+
 ## Repository Structure
 
 - Create a new git repository for each cookbook. This is known as [The Berkshelf Way](the_berkshelf_way/).
