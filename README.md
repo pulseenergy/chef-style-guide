@@ -219,6 +219,8 @@
 
 - Do not use data bags to store data that is different across environments. Environment files are very good at this already. Having two places to look ends up being very confusing.
 
+- One of the motivations to use data bags instead of attributes in environment files is to be selective about what data is downloaded and uploaded. If you have some large data bags that are only used by a small subset of your nodes, then you'll be wasting a lot of bandwidth by populating the node hierarchy with unwanted data, and then wasting more bandwidth when the node hierarchy is saved back to the Chef Server at the end of the run.
+
 - Before making structural changes to a data bag you must make your cookbook forward-compatible, and the cookbook must be promoted to all environments.
 
     Do not try to modify a data bag and a cookbook simultaneously. Data bags are atomic, and so are cookbooks. If you try to modify them simultaneously, you will end up with converge failures or worse.
