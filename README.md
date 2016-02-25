@@ -221,6 +221,10 @@
 
 - One of the motivations to use data bags instead of attributes in environment files is to be selective about what data is downloaded and uploaded. If you have some large data bags that are only used by a small subset of your nodes, then you'll be wasting a lot of bandwidth by populating the node hierarchy with unwanted data, and then wasting more bandwidth when the node hierarchy is saved back to the Chef Server at the end of the run.
 
+- Avoid using data bags in public cookbooks.
+
+    > Requiring a certain data bag structure forces people to manage their infrastructure in a certain manner. This is a violation of one of the guiding principles of Chef: you know your infrastructure best. The `users` cookbook is a big culprit here. It forces users to conform to a certain data structure, which rarely meets the ever-changing and unique demands of an organization. - [Seth Vargo](https://www.chef.io/blog/2014/01/23/attributes-or-data-bags-what-should-i-use/#comment-1213702855)
+
 - Before making structural changes to a data bag you must make your cookbook forward-compatible, and the cookbook must be promoted to all environments.
 
     Do not try to modify a data bag and a cookbook simultaneously. Data bags are atomic, and so are cookbooks. If you try to modify them simultaneously, you will end up with converge failures or worse.
