@@ -190,6 +190,12 @@
     ```
 
     Never refer to attributes from other cookbooks in your template.
+    
+- Use the ERB comment syntax for comments that don't need to be rendered into the file.
+
+    <%#
+    This is an ERB comment
+    %>
 
 ## Conditionals
 
