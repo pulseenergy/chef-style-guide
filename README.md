@@ -69,22 +69,23 @@
     default['my_cookbook']['limit'] = node['other_cookbook']['limit']
     ```
 
-- Never use `override` level in cookbook attribute files. Always use recipes to override attributes set by other cookbooks.
+- Never override other cookbooks' attributes inside your recipes. Always use `attributes/override.rb`.
 
-    Values in the node hierarchy are computed by merging the attribute files from all cookbooks in the run, regardless of whether you're using any recipes from those cookbooks. The `include_attribute` directive is just an ordering hint; attribute files are always included.
+    Using `node.default` and `node.override` in recipes, especially when overriding values used by other cookbooks, is risky because you cannot be sure that your recipe will run first. Your overrides will effectively be ignored, but your changes will still appear in the attributes of the node object saved to Chef server. This can be very difficult to debug.
 
-    If another cookbook wants to reference an attribute in your cookbook, it needs to depend on your cookbook. That should not carry the penalty of having additional side effects on attributes of other cookbooks.
+    The best place to override attributes is in `attributes/override.rb`. Attributes files are normally used to define the inputs to your cookbook. By putting overrides into a specific file, you make it clear that they are not inputs.
 
-    The most common place to override attributes is in wrapper cookbooks, so wrapper cookbooks are the main focus of this rule.
+    It is good practice to use `include_attribute` to include the attribute file that contains the values you are overriding. This provides fail-fast behaviour if the attribute file or the cookbook no longer exist. It also doubly ensures that your override takes precedence over the original value, even if they are at the same precedence level.
 
     ```ruby
-    # Recipe:: overrides
-    node.override['other_cookbook']['http_port'] = 8080
+    # Attributes:: override
+    include_attribute 'other_cookbook::default'
+    override['other_cookbook']['foo'] = 'my_override_value'
     ```
 
-    This makes it clear that the `attributes` directory is used to define part of your cookbook's public interface.
+    The only case where it's acceptable to override other cookbooks' attributes in your recipes is if you know that the cookbook you're overriding is using lazy attribute evaluation. However, this is exceedingly rare in the Chef ecosystem.
 
-    Moving overrides into recipes helps keep similar code together. If you are overriding attributes of other cookbooks but there is no corresponding `include_recipe` that warns you of an implicit dependency. Sometimes that is okay if your goal is a loose coupling of cookbooks.
+    An earlier version of this guide provided the opposite advice, suggesting that overrides should always be placed in recipes. However, it turns out that creates more problems than it solves, so the advice has been updated.
 
 - Avoid derived attributes in attribute files.
 
