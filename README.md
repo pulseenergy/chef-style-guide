@@ -222,6 +222,8 @@
 
 ## Roles
 
+- Minimize the number of roles in the run_list of each node. Typically a node should have one role, or two if you have separated base machine configuration from application configuration. This shifts complexity away from node management (which is ephemeral) to role management (which is tracked in version control).
+
 - Avoid setting attributes in roles. It's often confusing.
 
 ## Data Bags
