@@ -116,6 +116,12 @@
 
     When creating a new cookbook, move quickly to create a 1.0 version. You should definitely not spend more than a week creating 0.x.x releases. Cookbooks rapidly become dependent on each other, so you should acknowledge that you have a public interface by issuing a 1.0 release.
 
+- Prefer using optimistic version constraints in your cookbook dependencies rather than [pessimistic version constraints](https://stackoverflow.com/questions/4292905/what-is-the-difference-between-and-when-specifying-rubygem-in-gemfile) especially in community cookbooks.
+
+    A single pessimistic version constraint in a deep transitive dependency is enough to block usage of new cookbooks that are, in many cases, perfectly safe to use. It's common practice in the Chef community to bump the major version of a cookbook when dropping support for old versions of chef-client, but otherwise keep the API mostly intact.
+    
+    Use an optimistic version constraint (like `>= 1.4.0`) if you require particular functionality that is somewhat recent. Use a blocking version constraint (like `<= 3.0.0`) if you depend on a cookbook but are not yet compatible with recent versions. Only use pessimistic constraints (like `~> 1.0`) on dependencies in cookbooks that are private and not likely to have other cookbooks depend on them.
+
 - Never *ever* decrement the version of a cookbook. Failure to adhere is a violation of [Rule #2 in SemVer 2.0](http://semver.org/#spec-item-2).
 
     Chef-client will always use the highest-numbered cookbook that is available after considering all constraints. If Chef Server knows about a cookbook with a higher number than the one you just uploaded, then your code is not going to get run. Do not add a version constraint in your test environment to work around this; it will definitely bite you later on.
