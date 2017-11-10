@@ -187,6 +187,8 @@
     end
     ```
 
+- Use [node.run_state](https://docs.chef.io/recipes.html) to stash transient data during a chef-client run. The advantage of run_state is that values are not saved back onto the node object, so the run_state is suitable for semi-private values and larger data structures.
+
 ## Templates
 
 - Avoid using the `node` object within templates.
