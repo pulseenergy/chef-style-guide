@@ -107,6 +107,8 @@
     > "Due to the precedence merging algorithm Chef uses, Arrays are very difficult to work with." - [Our Experiences with Chef: Cookbook and Attribute Design](https://omniti.com/seeds/seeds-our-experiences-with-chef-cookbook-and-attribute-design)
 
     > "With hashes, this merge is relatively straight forward, if both the original and override values are hashes they are recursively merged together all the way down. This logic is less clear on arrays though. In Chef 11, the behavior is that on different precedence levels, the higher value overrides as with strings and other simple types." - [Arrays and Chef Attributes, Noah Kantrowitz](https://coderanger.net/arrays-and-chef/)
+    
+- Expect attributes to change between runs of chef-client. If your recipe cannot cope with an attribute changing, perhaps it should not be an attribute. Or alternately, your recipe might preserve the attribute using node.normal to ensure that it remains constant for that node on subsequent runs. This can be helpful if you want to configure new nodes in an environment differently.
 
 ## Cookbooks
 
