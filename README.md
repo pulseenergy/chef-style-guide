@@ -330,7 +330,12 @@
 
 - When you have some code that can definitely be removed at a future date or when some future condition is met, add an `# UNTIL:` comment that specifies the removal condition. Most *tombstone* resources (those with a `:delete` action) should include an `UNTIL:` comment.
 
+## What should you do with Chef logfiles? Can they be shipped to Splunk or Logstash easily?
+ - Use the Splunk Universal Forwarder and use a file monitor on the chef log files at:
+ -- /var/log/chef/client.log
+ -- c:\chef\log\client.log
+ - No built-in source type from Splunk
+
 ## Unresolved questions
 
 - Where is the best place to apply version constraints?
-- What should you do with Chef logfiles? Can they be shipped to Splunk or Logstash easily?
